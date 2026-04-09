@@ -4,162 +4,111 @@ export default function Camera() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [image, setImage] = useState(null);
   const [photos, setPhotos] = useState([]);
-  const [count, setCount] = useState(null);
-  const [strip, setStrip] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  // 🎥 Start Camera
+  // Start camera
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        videoRef.current.srcObject = stream;
-      })
-      .catch((err) => {
-        console.error("Camera error:", err);
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
       });
+      videoRef.current.srcObject = stream;
+    }
+
+    startCamera();
   }, []);
 
-  // 📸 Capture Photo
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
+  // Capture logic
+ const capturePhoto = () => {
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
 
-    if (!video || !canvas) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
 
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ctx.filter = "grayscale(100%)";
+  ctx.drawImage(video, 0, 0);
+  ctx.filter = "none";
 
-    const data = canvas.toDataURL("image/png");
+  return canvas.toDataURL("image/png");
+};
 
-    setImage(data);
-    setPhotos((prev) => [...prev, data]);
+  // Countdown + auto capture
+  const startSequence = async () => {
+    setIsCapturing(true);
+    let newPhotos = [];
 
-    setTimeout(() => {
-      generateStrip();
-    }, 500);
-  };
-
-  //  geenrate strip
-  const generateStrip = () => {
-    if (photos.length < 4) return;
-
-    const gap = 10;
-    canvas.height = (imgHeight + gap) * 4;
-    ctx.drawImage(img, 0, index * (imgHeight + gap), imgWidth, imgHeight);
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    const imgWidth = 200;
-    const imgHeight = 150;
-
-    canvas.width = imgWidth;
-    canvas.height = imgHeight * 4;
-
-    photos.slice(0, 4).forEach((photo, index) => {
-      const img = new Image();
-      img.src = photo;
-
-      img.onload = () => {
-        ctx.drawImage(img, 0, index * imgHeight, imgWidth, imgHeight);
-
-        if (index === 3) {
-          const finalStrip = canvas.toDataURL("image/png");
-          setStrip(finalStrip);
-        }
-      };
-    });
-  };
-
-  // ⏳ Countdown Logic
-  const startCountdown = () => {
-    let time = 3;
-    setCount(time);
-
-    const interval = setInterval(() => {
-      time--;
-      setCount(time);
-
-      if (time === 0) {
-        clearInterval(interval);
-        setCount(null);
-        capturePhoto();
+    for (let i = 0; i < 4; i++) {
+      // countdown 3..2..1
+      for (let j = 3; j > 0; j--) {
+        setCountdown(j);
+        await new Promise((res) => setTimeout(res, 1000));
       }
-    }, 1000);
+
+      setCountdown("📸");
+
+      await new Promise((res) => setTimeout(res, 500));
+
+      const photo = capturePhoto();
+      newPhotos.push(photo);
+      setPhotos([...newPhotos]);
+
+      await new Promise((res) => setTimeout(res, 1000));
+    }
+
+    setCountdown(null);
+    setIsCapturing(false);
   };
 
   return (
-    <div className="flex justify-center items-start gap-10 mt-10">
-      {/* 📸 LEFT — PHOTO STRIP */}
-      <div className="border-2 border-black p-4 flex flex-col gap-2">
-        <h2 className="text-sm text-center mb-2">strips</h2>
+    <div className="w-full flex flex-col items-center">
 
-        {photos.map((p, i) => (
-          <img key={i} src={p} className="w-[80px] border border-black p-1" />
-        ))}
-      </div>
+      <div className="w-[900px] border-2 border-black p-4 flex gap-6">
 
-      {/* 🎥 CENTER — CAMERA */}
-      <div className="flex flex-col items-center">
-        <video
-          ref={videoRef}
-          autoPlay
-          className="border-2 border-black w-[300px]"
-        />
+        {/* LEFT CAMERA */}
+        <div className="w-2/3 flex flex-col items-center gap-4 relative">
 
-        {/* ⏳ Countdown */}
-        {count !== null && <h1 className="text-5xl mt-3">{count}</h1>}
+          <video
+            ref={videoRef}
+            autoPlay
+            className="w-full border-2 border-black"
+          />
 
-        {/* 📸 Capture Button */}
-        <button
-          onClick={startCountdown}
-          className="mt-4 border-2 border-black px-6 py-2 hover:bg-black hover:text-white"
-        >
-          capture
-        </button>
+          {/* Countdown Overlay */}
+          {countdown && (
+            <div className="absolute text-6xl font-bold">
+              {countdown}
+            </div>
+          )}
 
-        {/* 🖼️ Preview + Download */}
-        {image && (
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <img
-              src={image}
-              alt="preview"
-              className="w-[120px] border border-black p-1"
-            />
-
-            <a
-              href={image}
-              download="photo.png"
-              className="border-2 border-black px-4 py-1 hover:bg-black hover:text-white"
-            >
-              download
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Hidden Canvas */}
-      <canvas ref={canvasRef} className="hidden" />
-      {strip && (
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <h2 className="text-lg">Your Photostrip</h2>
-
-          <img src={strip} className="border-2 border-black p-2 w-50" />
-
-          <a
-            href={strip}
-            download="photostrip.png"
-            className="border-2 border-black px-4 py-2 hover:bg-black hover:text-white"
+          <button
+            onClick={startSequence}
+            disabled={isCapturing}
+            className="border px-4 py-1 bg-white"
           >
-            Download Strip
-          </a>
+            start session 🎬
+          </button>
+
         </div>
-      )}
+
+        {/* RIGHT STRIP */}
+        <div className="w-1/3 border-2 border-black p-2 flex flex-col gap-2 items-center">
+
+          {photos.length === 0 && <p>no photos</p>}
+
+          {photos.map((p, i) => (
+            <img key={i} src={p} className="w-full border" />
+          ))}
+
+        </div>
+
+      </div>
+
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }
