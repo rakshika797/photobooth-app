@@ -24,6 +24,9 @@ export default function Camera() {
 
   // 📸 Capture photo with filter
   const capturePhoto = () => {
+    const audio = new Audio("/click.mp3");
+    audio.play();
+
     const video = videoRef.current;
 
     const canvas = canvasRef.current;
@@ -130,7 +133,9 @@ export default function Camera() {
           )}
 
           {currentStep > 0 && (
-            <p className="text-lg mt-2 animate-pulse">Photo {currentStep} / 4</p>
+            <p className="text-lg mt-2 animate-pulse">
+              Photo {currentStep} / 4
+            </p>
           )}
 
           <button
