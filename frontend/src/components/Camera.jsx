@@ -5,6 +5,7 @@ export default function Camera() {
   const canvasRef = useRef(null);
 
   const [photos, setPhotos] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
   const [countdown, setCountdown] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [strip, setStrip] = useState(null);
@@ -72,6 +73,7 @@ export default function Camera() {
     let newPhotos = [];
 
     for (let i = 0; i < 4; i++) {
+      setCurrentStep(i + 1);
       for (let j = 3; j > 0; j--) {
         setCountdown(j);
         await new Promise((res) => setTimeout(res, 1000));
@@ -90,6 +92,8 @@ export default function Camera() {
       setPhotos([...newPhotos]);
 
       await new Promise((res) => setTimeout(res, 800));
+
+      setCurrentStep(0);
     }
 
     setCountdown(null);
@@ -120,7 +124,13 @@ export default function Camera() {
 
           {/* ⏳ Countdown */}
           {countdown && (
-            <div className="absolute text-6xl font-bold animate-pulse">{countdown}</div>
+            <div className="absolute text-6xl font-bold animate-pulse">
+              {countdown}
+            </div>
+          )}
+
+          {currentStep > 0 && (
+            <p className="text-lg mt-2 animate-pulse">Photo {currentStep} / 4</p>
           )}
 
           <button
@@ -151,7 +161,10 @@ export default function Camera() {
         <div className="mt-6 flex flex-col items-center gap-3">
           <h2 className="text-lg">Final Photostrip</h2>
 
-          <img src={strip}className="w-[200px] border-2 border-black animate-[fadeIn_1s_ease-in]" />
+          <img
+            src={strip}
+            className="w-[200px] border-2 border-black animate-[fadeIn_1s_ease-in]"
+          />
 
           <a
             href={strip}
