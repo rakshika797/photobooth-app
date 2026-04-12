@@ -141,9 +141,13 @@ export default function Camera() {
           <button
             onClick={startSequence}
             disabled={isCapturing}
-            className="border px-4 py-2 bg-white transition-all duration-200 hover:bg-black hover:text-white active:scale-95"
+            className={`border px-4 py-2 ${
+              isCapturing
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-white hover:bg-black hover:text-white"
+            }`}
           >
-            start session 🎬
+            {isCapturing ? "capturing..." : "start session 🎬"}
           </button>
         </div>
 
