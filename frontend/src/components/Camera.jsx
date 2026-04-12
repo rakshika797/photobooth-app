@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-
+import frameImg from "../assets/frame.jpg";
 export default function Camera() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -45,31 +45,53 @@ export default function Camera() {
   };
 
   // 🔥 Generate final strip
-  const generateStrip = (photosArray) => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+ const generateStrip = (photosArray) => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-    const width = 200;
-    const height = 150;
-    const gap = 10;
+ const frame = new Image();
+ frame.src = frameImg;
+  // frame.src = "/src/assests/frame.jpg"; // path check kar lena
 
-    canvas.width = width;
-    canvas.height = (height + gap) * photosArray.length;
+  frame.onload = () => {
+    canvas.width = frame.width;
+    canvas.height = frame.height;
 
-    photosArray.forEach((photo, index) => {
+    // 1️⃣ frame draw karo
+    ctx.drawImage(frame, 0, 0);
+
+    // 2️⃣ positions (IMPORTANT ⚠️ tune karna padega)
+    const positions = [
+      { x: 120, y: 140, w: 360, h: 260 },
+      { x: 120, y: 450, w: 360, h: 260 },
+      { x: 120, y: 760, w: 360, h: 260 },
+      { x: 120, y: 1070, w: 360, h: 260 },
+    ];
+
+    let loaded = 0;
+    const images = [];
+
+    photosArray.forEach((src, i) => {
       const img = new Image();
-      img.src = photo;
+      img.src = src;
 
       img.onload = () => {
-        ctx.drawImage(img, 0, index * (height + gap), width, height);
+        images[i] = img;
+        loaded++;
 
-        if (index === photosArray.length - 1) {
+        if (loaded === photosArray.length) {
+          images.forEach((img, i) => {
+            const pos = positions[i];
+            ctx.drawImage(img, pos.x, pos.y, pos.w, pos.h);
+          });
+
           const finalStrip = canvas.toDataURL("image/png");
           setStrip(finalStrip);
         }
       };
     });
   };
+};
 
   // 🎬 Full photobooth session
   const startSequence = async () => {
