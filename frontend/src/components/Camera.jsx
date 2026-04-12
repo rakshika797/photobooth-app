@@ -10,6 +10,7 @@ export default function Camera() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [strip, setStrip] = useState(null);
   const [flash, setFlash] = useState(false);
+  const [styleMode, setStyleMode] = useState("classic");
 
   // 🎥 Start camera
   useEffect(() => {
@@ -122,7 +123,11 @@ export default function Camera() {
           <video
             ref={videoRef}
             autoPlay
-            className="w-full border-2 border-black"
+            className={`w-full ${
+              styleMode === "classic"
+                ? "border-2 border-black"
+                : "rounded-xl shadow-lg"
+            }`}
           />
 
           {/* ⏳ Countdown */}
@@ -149,6 +154,16 @@ export default function Camera() {
           >
             {isCapturing ? "capturing..." : "start session 🎬"}
           </button>
+          <button
+            onClick={() =>
+              setStyleMode((prev) =>
+                prev === "classic" ? "modern" : "classic",
+              )
+            }
+            className="border px-3 py-1 mt-2"
+          >
+            Toggle Style 🎨
+          </button>
         </div>
 
         {/* RIGHT PREVIEW STRIP */}
@@ -159,7 +174,9 @@ export default function Camera() {
             <img
               key={i}
               src={p}
-              className="w-full border animate-[fadeIn_0.5s_ease-in]"
+              className={`w-full animate-[fadeIn_0.5s_ease-in] ${
+                styleMode === "classic" ? "border" : "rounded-lg shadow-md"
+              }`}
             />
           ))}
         </div>
