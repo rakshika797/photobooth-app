@@ -167,7 +167,7 @@ export default function Camera() {
       {/* MAIN BOOTH */}
       <div className="w-full max-w-225 border-2 border-black p-4 flex flex-col md:flex-row gap-6">
         {/* LEFT CAMERA */}
-       <div className="w-full md:w-2/3 flex flex-col items-center gap-4 relative">
+        <div className="w-full md:w-2/3 flex flex-col items-center gap-4 relative">
           <video
             ref={videoRef}
             autoPlay
@@ -222,7 +222,7 @@ export default function Camera() {
             <img
               key={i}
               src={p}
-              className={`w-full animate-[fadeIn_0.5s_ease-in] ${
+              className={`w-[80px] md:w-full animate-[fadeIn_0.5s_ease-in] ${
                 styleMode === "classic" ? "border" : "rounded-lg shadow-md"
               }`}
             />
