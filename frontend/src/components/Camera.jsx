@@ -45,53 +45,80 @@ export default function Camera() {
   };
 
   // 🔥 Generate final strip
- const generateStrip = (photosArray) => {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const generateStrip = (photosArray) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
- const frame = new Image();
- frame.src = frameImg;
-  // frame.src = "/src/assests/frame.jpg"; // path check kar lena
+    const frame = new Image();
+    frame.src = frameImg;
+    // frame.src = "/src/assests/frame.jpg"; // path check kar lena
 
-  frame.onload = () => {
-    canvas.width = frame.width;
-    canvas.height = frame.height;
+    frame.onload = () => {
+      console.log(frame.width, frame.height);
+      canvas.width = frame.width;
+      canvas.height = frame.height;
 
-    // 1️⃣ frame draw karo
-    ctx.drawImage(frame, 0, 0);
+      // 1️⃣ frame draw karo
+      ctx.drawImage(frame, 0, 0);
 
-    // 2️⃣ positions (IMPORTANT ⚠️ tune karna padega)
-    const positions = [
-      { x: 120, y: 140, w: 360, h: 260 },
-      { x: 120, y: 450, w: 360, h: 260 },
-      { x: 120, y: 760, w: 360, h: 260 },
-      { x: 120, y: 1070, w: 360, h: 260 },
-    ];
+      // 2️⃣ positions (IMPORTANT ⚠️ tune karna padega)
+      const positions = [
+        { x: 90, y: 130, w: 400, h: 250 },
+        { x: 90, y: 430, w: 400, h: 250 },
+        { x: 90, y: 730, w: 400, h: 250 },
+        { x: 90, y: 1030, w: 400, h: 250 },
+      ];
 
-    let loaded = 0;
-    const images = [];
+      let loaded = 0;
+      const images = [];
 
-    photosArray.forEach((src, i) => {
-      const img = new Image();
-      img.src = src;
+      photosArray.forEach((src, i) => {
+        const img = new Image();
+        img.src = src;
 
-      img.onload = () => {
-        images[i] = img;
-        loaded++;
+        img.onload = () => {
+          images[i] = img;
+          loaded++;
 
-        if (loaded === photosArray.length) {
-          images.forEach((img, i) => {
-            const pos = positions[i];
-            ctx.drawImage(img, pos.x, pos.y, pos.w, pos.h);
-          });
+          if (loaded === photosArray.length) {
+            images.forEach((img, i) => {
+              const pos = positions[i];
+              const imgRatio = img.width / img.height;
+              const boxRatio = pos.w / pos.h;
 
-          const finalStrip = canvas.toDataURL("image/png");
-          setStrip(finalStrip);
-        }
-      };
-    });
+              let drawWidth, drawHeight, offsetX, offsetY;
+
+              if (imgRatio > boxRatio) {
+                // image wide hai
+                drawHeight = pos.h;
+                drawWidth = img.width * (pos.h / img.height);
+                offsetX = pos.x - (drawWidth - pos.w) / 2;
+                offsetY = pos.y;
+              } else {
+                // image tall hai
+                drawWidth = pos.w;
+                drawHeight = img.height * (pos.w / img.width);
+                offsetX = pos.x;
+                offsetY = pos.y - (drawHeight - pos.h) / 2;
+              }
+
+              const paddingTop = 10;
+
+              ctx.shadowColor = "rgba(0,0,0,0.3)";
+              ctx.shadowBlur = 10;
+              ctx.shadowOffsetY = 5;
+              ctx.shadowColor = "transparent";
+
+              ctx.drawImage(img, pos.x, pos.y, pos.w, pos.h);
+            });
+
+            const finalStrip = canvas.toDataURL("image/png");
+            setStrip(finalStrip);
+          }
+        };
+      });
+    };
   };
-};
 
   // 🎬 Full photobooth session
   const startSequence = async () => {
@@ -118,9 +145,8 @@ export default function Camera() {
       setPhotos([...newPhotos]);
 
       await new Promise((res) => setTimeout(res, 800));
-
-      setCurrentStep(0);
     }
+    setCurrentStep(0);
 
     setCountdown(null);
     setIsCapturing(false);
@@ -139,13 +165,13 @@ export default function Camera() {
     <div className="w-full flex flex-col items-center mt-6">
       {flash && <div className="fixed inset-0 bg-white opacity-80 z-50"></div>}
       {/* MAIN BOOTH */}
-      <div className="w-[900px] border-2 border-black p-4 flex gap-6">
+      <div className="w-full max-w-225 border-2 border-black p-4 flex flex-col md:flex-row gap-6">
         {/* LEFT CAMERA */}
-        <div className="w-2/3 flex flex-col items-center gap-4 relative">
+       <div className="w-full md:w-2/3 flex flex-col items-center gap-4 relative">
           <video
             ref={videoRef}
             autoPlay
-            className={`w-full ${
+            className={`w-20 md:w-full ${
               styleMode === "classic"
                 ? "border-2 border-black"
                 : "rounded-xl shadow-lg"
@@ -189,7 +215,7 @@ export default function Camera() {
         </div>
 
         {/* RIGHT PREVIEW STRIP */}
-        <div className="w-1/3 border-2 border-black p-2 flex flex-col gap-2 items-center">
+        <div className="w-full md:w-1/3 border-2 border-black p-2 flex flex-row md:flex-col gap-2 items-center overflow-x-auto">
           {photos.length === 0 && <p>no photos</p>}
 
           {photos.map((p, i) => (
